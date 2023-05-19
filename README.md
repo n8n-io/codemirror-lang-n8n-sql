@@ -6,4 +6,4 @@ Based on [`@codemirror/lang-sql`](https://github.com/codemirror/lang-sql).
 
 ## Author
 
-© 2022 [Iván Ovejero](https://github.com/ivov)
+© 2023 [Iván Ovejero](https://github.com/ivov)
