@@ -1,5 +1,5 @@
 import {ExternalTokenizer, InputStream} from "@lezer/lr"
-import {whitespace, LineComment, BlockComment, String as StringToken, Number, Bits, Bytes, Bool, Null,
+import {LineComment, BlockComment, String as StringToken, Number, Bits, Bytes, Bool, Null,
         ParenL, ParenR, BraceL, BraceR, BracketL, BracketR, Semi, Dot,
         Operator, Punctuation, SpecialVar, Identifier, QuotedIdentifier,
         Keyword, Type, Builtin} from "./sql.grammar.terms"
@@ -177,7 +177,6 @@ export function tokensFor(d: Dialect) {
     input.advance()
     if (inString(next, Space)) {
       while (inString(input.next, Space)) input.advance()
-      input.acceptToken(whitespace)
     } else if (next == Ch.Dollar && input.next == Ch.Dollar && d.doubleDollarQuotedStrings) {
       readDoubleDollarLiteral(input)
       input.acceptToken(StringToken)

@@ -5,7 +5,7 @@
   Statement { element+ }?
 }
 
-@skip { whitespace | LineComment | BlockComment }
+@skip { LineComment | BlockComment }
 
 element {
   String |
@@ -48,7 +48,6 @@ element {
 }
 
 @external tokens tokens from "./tokens" {
-  whitespace
   LineComment
   BlockComment
   String
