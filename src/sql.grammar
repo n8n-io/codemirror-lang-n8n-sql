@@ -28,7 +28,8 @@ element {
   Parens { ParenL element* ParenR } |
   Braces { BraceL element* BraceR } |
   Brackets { BracketL element* BracketR } |
-  Resolvable
+  Resolvable |
+  Whitespace
 }
 
 @tokens {
@@ -72,6 +73,7 @@ element {
   Bits
   Bytes
   Builtin
+  Whitespace
 }
 
 @detectDelim

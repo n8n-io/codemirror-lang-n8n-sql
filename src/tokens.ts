@@ -2,7 +2,7 @@ import {ExternalTokenizer, InputStream} from "@lezer/lr"
 import {LineComment, BlockComment, String as StringToken, Number, Bits, Bytes, Bool, Null,
         ParenL, ParenR, BraceL, BraceR, BracketL, BracketR, Semi, Dot,
         Operator, Punctuation, SpecialVar, Identifier, QuotedIdentifier,
-        Keyword, Type, Builtin} from "./sql.grammar.terms"
+        Keyword, Type, Builtin, Whitespace} from "./sql.grammar.terms"
 
 const enum Ch {
   Newline = 10,
@@ -176,7 +176,7 @@ export function tokensFor(d: Dialect) {
     let {next} = input
     input.advance()
     if (inString(next, Space)) {
-      input.acceptToken(StringToken)
+      input.acceptToken(Whitespace)
     } else if (next == Ch.Dollar && input.next == Ch.Dollar && d.doubleDollarQuotedStrings) {
       readDoubleDollarLiteral(input)
       input.acceptToken(StringToken)
