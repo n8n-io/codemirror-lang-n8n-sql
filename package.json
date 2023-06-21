@@ -1,5 +1,5 @@
 {
-  "name": "codemirror-lang-n8n-sql",
+  "name": "@n8n/codemirror-lang-n8n-sql",
   "version": "1.0.0",
   "description": "SQL + n8n expression language support for CodeMirror 6",
   "scripts": {
@@ -37,6 +37,6 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/codemirror/lang-sql.git"
+    "url": "https://github.com/n8n-io/codemirror-lang-n8n-sql.git"
   }
 }
