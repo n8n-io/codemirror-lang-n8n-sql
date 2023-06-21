@@ -11,8 +11,6 @@ describe("Parse MySQL tokens", () => {
   const parser = mysqlTokens.parser
 
   it("parses quoted bit-value literals", () => {
-    console.log(parser.parse("SELECT b'0101' \n\t FROM my_table").toString());
-    
     ist(parser.parse("SELECT b'0101'"), 'Script(Statement(Keyword,String,Bits))')
   })
 
