@@ -4,6 +4,10 @@ import {syntaxTree} from "@codemirror/language"
 import {SyntaxNode} from "@lezer/common"
 import {Type, Keyword} from "./sql.grammar.terms"
 
+function isEmptyStringNode(doc: Text, node: SyntaxNode) {
+  return doc.sliceString(node.from, node.to).trim() === '';
+}
+
 function tokenBefore(tree: SyntaxNode) {
   let cursor = tree.cursor().moveTo(tree.from, -1)
   while (/Comment/.test(cursor.name)) cursor.moveTo(cursor.from, -1)
@@ -65,12 +69,23 @@ function getAliases(doc: Text, at: SyntaxNode) {
   }
   let aliases = null
   for (let scan = statement.firstChild, sawFrom = false, prevID: SyntaxNode | null = null; scan; scan = scan.nextSibling) {
+    if (scan.name === "String") {
+      if (isEmptyStringNode(doc, scan)) {
+        continue;
+      }
+    }
     let kw = scan.name == "Keyword" ? doc.sliceString(scan.from, scan.to).toLowerCase() : null
     let alias = null
     if (!sawFrom) {
       sawFrom = kw == "from"
-    } else if (kw == "as" && prevID && plainID(scan.nextSibling)) {
-      alias = idName(doc, scan.nextSibling!)
+    } else if (kw == "as" && prevID) {
+      let next = scan.nextSibling;
+      if (isEmptyStringNode(doc, next)) {
+        while (isEmptyStringNode(doc, next)) {
+          next = next.nextSibling;
+        }
+      }
+      if (plainID(next)) alias = idName(doc, next)
     } else if (kw && EndFrom.has(kw)) {
       break
     } else if (prevID && plainID(scan)) {
