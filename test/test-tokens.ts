@@ -1,5 +1,5 @@
 import ist from "ist"
-import {PostgreSQL, MySQL, SQLDialect} from "codemirror-lang-n8n-sql"
+import {PostgreSQL, MySQL, SQLDialect} from "@n8n/codemirror-lang-sql"
 
 const mysqlTokens = MySQL.language
 const postgresqlTokens = PostgreSQL.language
@@ -57,6 +57,25 @@ describe("Parse BigQuery tokens", () => {
 
 describe("Parse n8n resolvables", () => {
   const parser = postgresqlTokens.parser
+
+  it("parses resolvables with dots inside composite identifiers", () => {
+    ist(
+      parser.parse("SELECT my_column FROM {{ 'schema' }}.{{ 'table' }}"),
+      'Script(Statement(Keyword,Whitespace,Identifier,Whitespace,Keyword,Whitespace,CompositeIdentifier(Resolvable,".",Resolvable)))'
+    )
+    ist(
+      parser.parse("SELECT my_column FROM {{ 'schema' }}.{{ 'table' }}.{{ 'foo' }}"),
+      'Script(Statement(Keyword,Whitespace,Identifier,Whitespace,Keyword,Whitespace,CompositeIdentifier(Resolvable,".",Resolvable,".",Resolvable)))'
+    )
+    ist(
+      parser.parse("SELECT my_column FROM public.{{ 'table' }}"),
+      'Script(Statement(Keyword,Whitespace,Identifier,Whitespace,Keyword,Whitespace,CompositeIdentifier(Identifier,".",Resolvable)))'
+    )
+    ist(
+      parser.parse("SELECT my_column FROM {{ 'schema' }}.users"),
+      'Script(Statement(Keyword,Whitespace,Identifier,Whitespace,Keyword,Whitespace,CompositeIdentifier(Resolvable,".",Identifier)))'
+    )
+  })
 
   it("parses 4-node SELECT variants", () => {
     ist(parser.parse("{{ 'SELECT' }} my_column FROM my_table"), 'Script(Statement(Resolvable,Whitespace,Identifier,Whitespace,Keyword,Whitespace,Identifier))')
