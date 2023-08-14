@@ -96,4 +96,12 @@ describe("Parse n8n resolvables", () => {
 
     ist(parser.parse("SELECT my_column FROM {{ 'my_table' }};"), 'Script(Statement(Keyword,Whitespace,Identifier,Whitespace,Keyword,Whitespace,Resolvable,";"))')
   })
+
+  it("parses resolvable inside single quotes", () => {
+    ist(parser.parse("SELECT my_column FROM '{{ 'my_table' }}';"), 'Script(Statement(Keyword,Whitespace,Identifier,Whitespace,Keyword,Whitespace,String,Resolvable,String,";"))')
+  });
+
+  it("parses resolvable inside double quotes", () => {
+    ist(parser.parse("SELECT my_column FROM \"{{ 'my_table' }}\";"), 'Script(Statement(Keyword,Whitespace,Identifier,Whitespace,Keyword,Whitespace,String,Resolvable,String,";"))')
+  });
 })

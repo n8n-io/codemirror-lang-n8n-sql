@@ -171,6 +171,16 @@ export function dialect(spec: Partial<Dialect>, kws?: string, types?: string, bu
   return dialect
 }
 
+/**
+ * Check whether the next char is a quote before a `Resolvable`: `'{{` or `"{{`
+ */
+const isPreExpression = (input: InputStream) => input.next == Ch.BraceL && input.peek(1) == Ch.BraceL
+
+/**
+ * Check whether the next char is a quote after a `Resolvable`: `}}'` or `}}"`
+ */
+const isPostExpression = (input: InputStream) => input.peek(-2) == Ch.BraceR && input.peek(-3) == Ch.BraceR
+
 export function tokensFor(d: Dialect) {
   return new ExternalTokenizer(input => {
     let {next} = input
@@ -182,6 +192,12 @@ export function tokensFor(d: Dialect) {
       readDoubleDollarLiteral(input)
       input.acceptToken(StringToken)
     } else if (next == Ch.SingleQuote || next == Ch.DoubleQuote && d.doubleQuotedStrings) {
+
+      if (isPreExpression(input) || isPostExpression(input)) {
+        input.acceptToken(StringToken)
+        return;
+      }
+      
       readLiteral(input, next, d.backslashEscapes)
       input.acceptToken(StringToken)
     } else if (next == Ch.Hash && d.hashComments ||
@@ -278,6 +294,12 @@ export function tokensFor(d: Dialect) {
       readWordOrQuoted(input)
       input.acceptToken(SpecialVar)
     } else if (inString(next, d.identifierQuotes)) {
+      
+      if (isPreExpression(input) || isPostExpression(input)) {
+        input.acceptToken(StringToken)
+        return;
+      }
+
       readLiteral(input, next, false)
       input.acceptToken(QuotedIdentifier)
     } else if (next == Ch.Colon || next == Ch.Comma) {
