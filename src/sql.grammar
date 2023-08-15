@@ -28,11 +28,16 @@ element {
   Parens { ParenL element* ParenR } |
   Braces { BraceL element* BraceR } |
   Brackets { BracketL element* BracketR } |
+  orphanWrappedResolvable {
+    (OrphanSingleQuote Whitespace? Resolvable Whitespace? OrphanSingleQuote)
+  } |
   Resolvable |
   Whitespace
 }
 
 @tokens {
+  OrphanSingleQuote { "'" }
+
   Resolvable { ResolvableStart resolvableContent* ResolvableEnd }
 
   ResolvableStart[closedBy="ResolvableEnd"] { "{{" }
