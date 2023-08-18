@@ -1,0 +1,22 @@
+name: CI Pull Requests
+
+on: [pull_request]
+
+jobs:
+  ci-pull-request:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out commit
+        uses: actions/checkout@v3
+
+      - name: Use Node.js 18
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18.x
+
+      - name: Install, prepare and test
+        run: |
+          npm install --frozen-lockfile
+          npm run prepare
+          npm run test
