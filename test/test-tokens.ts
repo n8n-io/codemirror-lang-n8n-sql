@@ -96,4 +96,20 @@ describe("Parse n8n resolvables", () => {
 
     ist(parser.parse("SELECT my_column FROM {{ 'my_table' }};"), 'Script(Statement(Keyword,Whitespace,Identifier,Whitespace,Keyword,Whitespace,Resolvable,";"))')
   })
+
+  it("parses single-quoted resolvable with no whitespace", () => {
+    ist(parser.parse("SELECT my_column FROM '{{ 'my_table' }}';"), 'Script(Statement(Keyword,Whitespace,Identifier,Whitespace,Keyword,Whitespace,OrphanSingleQuote,Resolvable,OrphanSingleQuote,";"))')
+  });
+
+  it("parses single-quoted resolvable with leading whitespace", () => {
+    ist(parser.parse("SELECT my_column FROM ' {{ 'my_table' }}';"), 'Script(Statement(Keyword,Whitespace,Identifier,Whitespace,Keyword,Whitespace,OrphanSingleQuote,Whitespace,Resolvable,OrphanSingleQuote,";"))')
+  });
+
+  it("parses single-quoted resolvable with trailing whitespace", () => {
+    ist(parser.parse("SELECT my_column FROM '{{ 'my_table' }} ';"), 'Script(Statement(Keyword,Whitespace,Identifier,Whitespace,Keyword,Whitespace,OrphanSingleQuote,Resolvable,Whitespace,OrphanSingleQuote,";"))')
+  });
+
+  it("parses single-quoted resolvable with surrounding whitespace", () => {
+    ist(parser.parse("SELECT my_column FROM ' {{ 'my_table' }} ';"), 'Script(Statement(Keyword,Whitespace,Identifier,Whitespace,Keyword,Whitespace,OrphanSingleQuote,Whitespace,Resolvable,Whitespace,OrphanSingleQuote,";"))')
+  });
 })
