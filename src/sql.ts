@@ -3,8 +3,59 @@ import {Extension} from "@codemirror/state"
 import {Completion, CompletionSource} from "@codemirror/autocomplete"
 import {styleTags, tags as t} from "@lezer/highlight"
 import {parser as baseParser} from "./sql.grammar"
+import {parser as expressionParser} from "./expressions.grammar"
+import {parseMixed} from "@lezer/common"
 import {tokens, Dialect, tokensFor, SQLKeywords, SQLTypes, dialect} from "./tokens"
 import {completeFromSchema, completeKeywords} from "./complete"
+
+const getParser = (dialect: Dialect) => {
+  const sqlParser = baseParser.configure({
+    props: [
+      indentNodeProp.add({
+        Statement: continuedIndent()
+      }),
+      foldNodeProp.add({
+        Statement(tree) { return {from: tree.firstChild!.to, to: tree.to} },
+        BlockComment(tree) { return {from: tree.from + 2, to: tree.to - 2} }
+      }),
+      styleTags({
+        Keyword: t.keyword,
+        Type: t.typeName,
+        Builtin: t.standard(t.name),
+        Bits: t.number,
+        Bytes: t.string,
+        Bool: t.bool,
+        Null: t.null,
+        Number: t.number,
+        String: t.string,
+        Identifier: t.name,
+        QuotedIdentifier: t.special(t.string),
+        SpecialVar: t.special(t.name),
+        LineComment: t.lineComment,
+        BlockComment: t.blockComment,
+        Operator: t.operator,
+        "Semi Punctuation": t.punctuation,
+        "( )": t.paren,
+        "{ }": t.brace,
+        "[ ]": t.squareBracket
+      })
+    ],
+  })
+  
+  const parser =  expressionParser.configure({
+    wrap: parseMixed(node => {
+      return node.type.isTop ? {
+        parser: sqlParser.configure({
+          tokenizers: [{from: tokens, to: tokensFor(dialect)}]
+        }),
+        overlay: node => node.type.name == "Plaintext"
+      } : null
+    })
+  })
+
+  return parser;
+}
+
 
 let parser = baseParser.configure({
   props: [
@@ -100,9 +151,7 @@ export class SQLDialect {
     let d = dialect(spec, spec.keywords, spec.types, spec.builtin)
     let language = LRLanguage.define({
       name: "sql",
-      parser: parser.configure({
-        tokenizers: [{from: tokens, to: tokensFor(d)}]
-      }),
+      parser: getParser(d),
       languageData: {
         commentTokens: {line: "--", block: {open: "/*", close: "*/"}},
         closeBrackets: {brackets: ["(", "[", "{", "'", '"', "`"]}

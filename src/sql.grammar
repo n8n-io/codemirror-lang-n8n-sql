@@ -5,7 +5,7 @@
   Statement { element+ }?
 }
 
-@skip { LineComment | BlockComment }
+@skip { Whitespace | LineComment | BlockComment }
 
 element {
   String |
@@ -19,7 +19,7 @@ element {
   Builtin |
   SpecialVar |
   CompositeIdentifier {
-    Dot? (QuotedIdentifier | Identifier | SpecialVar | Resolvable) (!dot Dot (QuotedIdentifier | Identifier | SpecialVar | Resolvable))+
+    Dot? (QuotedIdentifier | Identifier | SpecialVar) (!dot Dot (QuotedIdentifier | Identifier | SpecialVar))+
   } |
   Keyword |
   Type |
@@ -27,33 +27,11 @@ element {
   Punctuation |
   Parens { ParenL element* ParenR } |
   Braces { BraceL element* BraceR } |
-  Brackets { BracketL element* BracketR } |
-  orphanWrappedResolvable {
-    (OrphanSingleQuote Whitespace? Resolvable Whitespace? OrphanSingleQuote)
-  } |
-  Resolvable |
-  Whitespace
-}
-
-@tokens {
-  OrphanSingleQuote { "'" }
-
-  Resolvable { ResolvableStart resolvableContent* ResolvableEnd }
-
-  ResolvableStart[closedBy="ResolvableEnd"] { "{{" }
-
-  ResolvableEnd[openedBy="ResolvableStart"] { "}}" }
-
-  resolvableContent {
-    unicodeChar |
-    "}" ![}] |
-    "\\}}"
-  }
-
-  unicodeChar { $[\u0000-\u007C] | $[\u007E-\u06FF] }
+  Brackets { BracketL element* BracketR }
 }
 
 @external tokens tokens from "./tokens" {
+  Whitespace
   LineComment
   BlockComment
   String
@@ -78,7 +56,6 @@ element {
   Bits
   Bytes
   Builtin
-  Whitespace
 }
 
 @detectDelim
