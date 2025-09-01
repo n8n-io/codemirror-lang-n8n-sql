@@ -1,19 +1,21 @@
 import {EditorState} from "@codemirror/state"
 import {CompletionContext, CompletionResult, CompletionSource} from "@codemirror/autocomplete"
-import {schemaCompletionSource, PostgreSQL, MySQL, SQLConfig} from "@n8n/codemirror-lang-sql"
+import {schemaCompletionSource, PostgreSQL, MySQL, SQLConfig, getParser} from "@n8n/codemirror-lang-sql"
 import ist from "ist"
+import { LanguageSupport } from '@codemirror/language'
 
 function get(doc: string, conf: SQLConfig & {explicit?: boolean} = {}) {
-  let cur = doc.indexOf("|"), dialect = conf.dialect || PostgreSQL
+  let cur = doc.indexOf("|");
+  const dialect = conf.dialect || PostgreSQL
   doc = doc.slice(0, cur) + doc.slice(cur + 1)
+ 
   let state = EditorState.create({
     doc,
     selection: {anchor: cur},
-    extensions: [dialect, dialect.language.data.of({
+    extensions: [dialect.getLanguageSupport([{
       autocomplete: schemaCompletionSource(Object.assign({dialect}, conf))
-    })]
+    }])]
   })
-  console.log('languageDataAt',state.languageDataAt<CompletionSource>("autocomplete", cur))
   let result = state.languageDataAt<CompletionSource>("autocomplete", cur)[0](new CompletionContext(state, cur, !!conf.explicit))
   return result as CompletionResult | null
 }
@@ -145,7 +147,7 @@ describe("SQL completion", () => {
   })
 
   it("supports alternate quoting styles", () => {
-    ist(str(get("select `u|", {dialect: MySQL, schema: schema1})), "`products`, `users`")
+    ist(str(get("select `u|", {dialect: MySQL, schema: schema1})), "products, users")
   })
 
   it("doesn't complete without identifier", () => {

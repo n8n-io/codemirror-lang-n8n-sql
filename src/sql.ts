@@ -8,8 +8,9 @@ import {parseMixed} from "@lezer/common"
 import {tokens, Dialect, tokensFor, SQLKeywords, SQLTypes, dialect} from "./tokens"
 import {completeFromSchema, completeKeywords} from "./complete"
 
-const getParser = (dialect: Dialect) => {
-  const sqlParser = baseParser.configure({
+
+const getSqlParser = (dialect: Dialect) => {
+  return baseParser.configure({
     props: [
       indentNodeProp.add({
         Statement: continuedIndent()
@@ -41,19 +42,37 @@ const getParser = (dialect: Dialect) => {
       })
     ],
   })
-  
-  const parser =  expressionParser.configure({
+}
+
+export const getParser = (dialect: Dialect) => {
+  const sqlLangData = {
+      commentTokens: {line: "--", block: {open: "/*", close: "*/"}},
+      closeBrackets: {brackets: ["(", "[", "{", "'", '"', "`"]}
+  }
+  const sqlParser = getSqlParser(dialect).configure({
+    tokenizers: [{from: tokens, to: tokensFor(dialect)}]
+  });
+  const sqlLanguage = LRLanguage.define({
+    name: "sql",
+    parser: getSqlParser(dialect),
+    languageData: sqlLangData
+  })
+
+  const mixedParser =  expressionParser.configure({
     wrap: parseMixed(node => {
       return node.type.isTop ? {
-        parser: sqlParser.configure({
-          tokenizers: [{from: tokens, to: tokensFor(dialect)}]
-        }),
+        parser: sqlLanguage.parser,
         overlay: node => node.type.name == "Plaintext"
       } : null
     })
   })
 
-  return parser;
+  const mixedLanguage = LRLanguage.define({
+    parser: mixedParser,
+    name: 'expressionParser'
+  })
+
+  return {mixedLanguage, sqlLanguage}
 }
 
 
@@ -140,24 +159,30 @@ export class SQLDialect {
     /// The language for this dialect.
     readonly language: LRLanguage,
     /// The spec used to define this dialect.
-    readonly spec: SQLDialectSpec
+    readonly spec: SQLDialectSpec,
+    /// @internal
+    readonly sqlLanguage: LRLanguage,
   ) {}
 
   /// Returns the language for this dialect as an extension.
   get extension() { return this.language.extension }
 
+  getLanguageSupport(extensions: { [name: string]: any; }[]) {
+    const sqlLanguageSupport = new LanguageSupport(this.sqlLanguage, [
+      extensions.map((input) => {
+        return this.sqlLanguage.data.of(input)
+      })
+    ])
+    const mixedLanguageSupport = new LanguageSupport(this.language,[sqlLanguageSupport.support]);
+    return mixedLanguageSupport;
+  }
+
   /// Define a new dialect.
   static define(spec: SQLDialectSpec) {
     let d = dialect(spec, spec.keywords, spec.types, spec.builtin)
-    let language = LRLanguage.define({
-      name: "sql",
-      parser: getParser(d),
-      languageData: {
-        commentTokens: {line: "--", block: {open: "/*", close: "*/"}},
-        closeBrackets: {brackets: ["(", "[", "{", "'", '"', "`"]}
-      }
-    })
-    return new SQLDialect(d, language, spec)
+    const {mixedLanguage, sqlLanguage} = getParser(d)
+    let language = mixedLanguage
+    return new SQLDialect(d, language, spec, sqlLanguage)
   }
 }
 
