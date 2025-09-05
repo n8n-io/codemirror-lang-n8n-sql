@@ -9,7 +9,7 @@ import {tokens, Dialect, tokensFor, SQLKeywords, SQLTypes, dialect} from "./toke
 import {completeFromSchema, completeKeywords} from "./complete"
 
 
-const getSqlParser = (dialect: Dialect) => {
+const getSqlParser = () => {
   return baseParser.configure({
     props: [
       indentNodeProp.add({
@@ -49,12 +49,12 @@ export const getParser = (dialect: Dialect) => {
       commentTokens: {line: "--", block: {open: "/*", close: "*/"}},
       closeBrackets: {brackets: ["(", "[", "{", "'", '"', "`"]}
   }
-  const sqlParser = getSqlParser(dialect).configure({
+  const sqlParser = getSqlParser().configure({
     tokenizers: [{from: tokens, to: tokensFor(dialect)}]
   });
   const sqlLanguage = LRLanguage.define({
     name: "sql",
-    parser: getSqlParser(dialect),
+    parser: sqlParser,
     languageData: sqlLangData
   })
 
@@ -156,26 +156,16 @@ export class SQLDialect {
   private constructor(
     /// @internal
     readonly dialect: Dialect,
-    /// The language for this dialect.
+    /// The mixed language for this dialect.
     readonly language: LRLanguage,
     /// The spec used to define this dialect.
     readonly spec: SQLDialectSpec,
-    /// @internal
+    /// The sql language for this dialect.
     readonly sqlLanguage: LRLanguage,
   ) {}
 
   /// Returns the language for this dialect as an extension.
   get extension() { return this.language.extension }
-
-  getLanguageSupport(extensions: { [name: string]: any; }[]) {
-    const sqlLanguageSupport = new LanguageSupport(this.sqlLanguage, [
-      extensions.map((input) => {
-        return this.sqlLanguage.data.of(input)
-      })
-    ])
-    const mixedLanguageSupport = new LanguageSupport(this.language,[sqlLanguageSupport.support]);
-    return mixedLanguageSupport;
-  }
 
   /// Define a new dialect.
   static define(spec: SQLDialectSpec) {

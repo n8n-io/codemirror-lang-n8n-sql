@@ -12,9 +12,9 @@ function get(doc: string, conf: SQLConfig & {explicit?: boolean} = {}) {
   let state = EditorState.create({
     doc,
     selection: {anchor: cur},
-    extensions: [dialect.getLanguageSupport([{
+    extensions: [dialect, dialect.sqlLanguage.data.of({
       autocomplete: schemaCompletionSource(Object.assign({dialect}, conf))
-    }])]
+    })]
   })
   let result = state.languageDataAt<CompletionSource>("autocomplete", cur)[0](new CompletionContext(state, cur, !!conf.explicit))
   return result as CompletionResult | null
@@ -147,7 +147,7 @@ describe("SQL completion", () => {
   })
 
   it("supports alternate quoting styles", () => {
-    ist(str(get("select `u|", {dialect: MySQL, schema: schema1})), "products, users")
+    ist(str(get("select `u|", {dialect: MySQL, schema: schema1})), "`products`, `users`")
   })
 
   it("doesn't complete without identifier", () => {
