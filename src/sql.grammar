@@ -28,6 +28,7 @@ element {
   Parens { ParenL element* ParenR } |
   Braces { BraceL element* BraceR } |
   Brackets { BracketL element* BracketR }
+  Function
 }
 
 @external tokens tokens from "./tokens" {
@@ -56,6 +57,7 @@ element {
   Bits
   Bytes
   Builtin
+  Function
 }
 
 @detectDelim
