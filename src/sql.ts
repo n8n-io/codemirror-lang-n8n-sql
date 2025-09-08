@@ -181,7 +181,7 @@ export function keywordCompletionSource(dialect: SQLDialect, upperCase = false):
 
 /// FIXME remove on 1.0 @internal
 export function keywordCompletion(dialect: SQLDialect, upperCase = false): Extension {
-  return dialect.language.data.of({
+  return dialect.sqlLanguage.data.of({
     autocomplete: keywordCompletionSource(dialect, upperCase)
   })
 }
@@ -196,7 +196,7 @@ export function schemaCompletionSource(config: SQLConfig): CompletionSource {
 
 /// FIXME remove on 1.0 @internal
 export function schemaCompletion(config: SQLConfig): Extension {
-  return config.schema ? (config.dialect || StandardSQL).language.data.of({
+  return config.schema ? (config.dialect || StandardSQL).sqlLanguage.data.of({
     autocomplete: schemaCompletionSource(config)
   }) : []
 }
