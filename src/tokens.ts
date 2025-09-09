@@ -125,7 +125,7 @@ function keywords(keywords: string, types: string, builtin?: string, functions?:
   for (let kw of keywords.split(" ")) if (kw) result[kw] = Keyword
   for (let tp of types.split(" ")) if (tp) result[tp] = Type
   for (let kw of (builtin || "").split(" ")) if (kw) result[kw] = Builtin
-  for (let kw of (functions || "").split(" ")) if (kw) result[kw] = Function
+  for (let fn of (functions || "").split(" ")) if (fn) result[fn] = Function
   return result
 }
 
